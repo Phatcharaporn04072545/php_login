@@ -1,15 +1,15 @@
 <?php
-// ฟังก์ชันสำหรับเรียกใช้ API และแสดงผลข้อมูลในรูปแบบตาราง HTML
+session_start();
+
+
 function callApiAndDisplay($username, $password, $utype_value) {
-    // URL ของ API endpoint
+    // API Login
     $apiUrl = 'http://172.16.99.200/api/pmk/get_data/';
 
-
-    // สร้าง cURL
+  
     $curl = curl_init();
 
-
-    // ตั้งค่า cURL
+ 
     curl_setopt_array($curl, array(
         CURLOPT_URL => $apiUrl,
         CURLOPT_RETURNTRANSFER => true,
@@ -27,20 +27,16 @@ function callApiAndDisplay($username, $password, $utype_value) {
         )),
     ));
 
-
-    // เรียก API และรับการตอบกลับ
+   
     $response = curl_exec($curl);
 
-
-    // ปิด cURL
+ 
     curl_close($curl);
 
-
-    // แปลงการตอบกลับเป็น array
+    
     $responseData = json_decode($response, true);
 
-
-    // ตรวจสอบว่ามีข้อมูลที่ได้รับมาจาก API หรือไม่ และแสดงผลลัพธ์ในรูปแบบของตาราง HTML
+    
     if ($responseData && is_array($responseData)) {
         echo "<h2>Data from API</h2>";
         echo "<table>";
@@ -55,39 +51,23 @@ function callApiAndDisplay($username, $password, $utype_value) {
 }
 
 
-// เช็คว่ามีการส่งข้อมูลแบบ POST มาหรือไม่
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
-    $utype = $_POST['user_type'];
+    if (isset($_POST['hn'])) {
+        $hn = $_POST['hn'];
 
-
-    // แปลงค่า utype เป็นค่าที่ถูกต้องสำหรับ API
-    switch ($utype) {
-        case 'doctor':
-            $utype_value = 1;
-            break;
-        case 'staff':
-            $utype_value = 2;
-            break;
-        default:
-            $utype_value = 0;
-            break;
+        
+        header("Location: hn_data.php?hn=" . urlencode($hn));
+        exit();
     }
-
-
-    // เรียกใช้ฟังก์ชันสำหรับเรียกใช้ API และแสดงผลข้อมูล
-    callApiAndDisplay($username, $password, $utype_value);
 }
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Login</title>
-    <link rel="stylesheet" href="styles.css"> <!-- เปลี่ยน href ตามต้องการ -->
+    <link rel="stylesheet" href="styles.css"> <!-- Adjust href as needed -->
     <style>
         table {
             width: 50%;
@@ -106,3 +86,40 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     </style>
 </head>
+<body>
+
+<?php
+if (isset($_SESSION['username'])) {
+    echo "<div class='welcome-message'>Welcome, {$_SESSION['username']}!</div>";
+    echo '
+    <form method="post" action="">
+        <div class="hn-form">
+            <label for="hn">Enter HN:</label>
+            <input type="text" id="hn" name="hn" required>
+            <button type="submit">Submit</button>
+        </div>
+    </form>
+    ';
+} else {
+    echo '
+    <form method="post" action="">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+        <br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+        <br>
+        <label for="user_type">User Type:</label>
+        <select id="user_type" name="user_type" required>
+            <option value="doctor">Doctor</option>
+            <option value="staff">Staff</option>
+        </select>
+        <br>
+        <button type="submit">Login</button>
+    </form>
+    ';
+}
+?>
+
+</body>
+</html>
